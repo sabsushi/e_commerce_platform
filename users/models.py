@@ -7,16 +7,15 @@ from django.dispatch import receiver
 
 
 class Profile(models.Model):
-
     class Role(models.TextChoices):
-        BUYER  = 'buyer',  'Buyer'
-        SELLER = 'seller', 'Seller'
+        BUYER = "buyer", "Buyer"
+        SELLER = "seller", "Seller"
 
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     role = models.CharField(max_length=10, choices=Role.choices, default=Role.BUYER)
 
     def __str__(self):
-        return f'{self.user.id} - {self.user.username} ({self.role})'
+        return f"{self.user.id} - {self.user.username} ({self.role})"
 
 
 @receiver(post_save, sender=User)
