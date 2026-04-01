@@ -63,7 +63,7 @@ class Product(models.Model):
     slug = models.SlugField(unique=True)
     description = models.TextField()
     product_type = models.CharField(max_length=20, choices=ProductType.choices)
-    category = models.ForeignKey(Category, on_delete=models.PROTECT)
+    category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name="products")
     seller = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
