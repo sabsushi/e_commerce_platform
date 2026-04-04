@@ -1,10 +1,6 @@
 from django.conf import settings
 from django.db import models
 from django.core.exceptions import ValidationError
-from django.contrib.postgres.indexes import GinIndex
-from django.contrib.postgres.search import SearchVectorField, SearchVector
-from django.db.models.signals import post_save
-from django.dispatch import receiver
 
 
 class StockChange(models.Model):
@@ -75,15 +71,9 @@ class Product(models.Model):
     )
     base_price = models.DecimalField(max_digits=10, decimal_places=2)
     image = models.ImageField(upload_to="products/", blank=True, null=True)
-    search_vector = SearchVectorField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        indexes = [
-            GinIndex(fields=["search_vector"]),
-        ]
 
     def __str__(self):
         return self.name
@@ -110,9 +100,3 @@ class ProductVariant(models.Model):
                 )
 
 
-@receiver(post_save, sender=Product)
-def update_search_vector(sender, instance, **kwargs):
-    Product.objects.filter(pk=instance.pk).update(
-        search_vector=SearchVector("name", weight="A")
-        + SearchVector("description", weight="B")
-    )
