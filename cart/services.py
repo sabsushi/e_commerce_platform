@@ -13,26 +13,27 @@ def get_or_create_cart(user):
 
 
 def add_to_cart(user, variant_id, quantity=1):
+    if quantity <= 0:
+        raise ValueError("Quantity must be greater than 0")
+
     cart = get_or_create_cart(user)
 
-    try:
-        variant = ProductVariant.objects.get(pk=variant_id, is_active=True)
-    except ProductVariant.DoesNotExist:
-        raise ValueError("Product variant not found or inactive")
+    with transaction.atomic():
+        try:
+            variant = ProductVariant.objects.select_for_update().get(pk=variant_id, is_active=True)
+        except ProductVariant.DoesNotExist:
+            raise ValueError("Product variant not found or inactive")
 
-    if variant.stock < quantity:
-        raise ValueError("Insufficient stock")
+        cart_item, created = CartItem.objects.get_or_create(
+            cart=cart, variant=variant, defaults={"quantity": 0}
+        )
 
-    cart_item, created = CartItem.objects.get_or_create(
-        cart=cart, variant=variant, defaults={"quantity": 0}
-    )
+        new_quantity = cart_item.quantity + quantity
+        if variant.stock < new_quantity:
+            raise ValueError("Insufficient stock for requested quantity")
 
-    new_quantity = cart_item.quantity + quantity
-    if variant.stock < new_quantity:
-        raise ValueError("Insufficient stock for requested quantity")
-
-    cart_item.quantity = new_quantity
-    cart_item.save()
+        cart_item.quantity = new_quantity
+        cart_item.save()
 
     return cart_item
 

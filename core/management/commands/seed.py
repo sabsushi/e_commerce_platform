@@ -16,13 +16,15 @@ class Command(BaseCommand):
         with transaction.atomic():
             self._create_superuser()
             self._create_buyer()
+            seller = self._create_seller()
             categories = self._create_categories()
-            self._create_products(categories)
+            self._create_products(categories, seller)
         self.stdout.write(self.style.SUCCESS("Done! Database seeded successfully."))
         self.stdout.write("")
-        self.stdout.write("  Admin login : admin / admin123")
-        self.stdout.write("  Buyer login : buyer / buyer123")
-        self.stdout.write("  App URL     : http://127.0.0.1:8000/")
+        self.stdout.write("  Admin login  : admin / admin123")
+        self.stdout.write("  Buyer login  : buyer / buyer123")
+        self.stdout.write("  Seller login : seller / seller123")
+        self.stdout.write("  App URL      : http://127.0.0.1:8000/")
 
     # ------------------------------------------------------------------
     # helpers
@@ -49,6 +51,21 @@ class Command(BaseCommand):
             password="buyer123",
         )
         self.stdout.write("  [ok] user 'buyer' created")
+
+    def _create_seller(self):
+        from users.models import Profile
+
+        if User.objects.filter(username="seller").exists():
+            self.stdout.write("  [skip] user 'seller' already exists")
+            return User.objects.get(username="seller")
+        seller = User.objects.create_user(
+            username="seller",
+            email="seller@example.com",
+            password="seller123",
+        )
+        Profile.objects.filter(user=seller).update(role=Profile.Role.SELLER)
+        self.stdout.write("  [ok] user 'seller' created (role: Seller)")
+        return seller
 
     def _create_categories(self):
         from products.models import Category
@@ -84,7 +101,7 @@ class Command(BaseCommand):
 
         return categories
 
-    def _create_products(self, categories):
+    def _create_products(self, categories, seller):
         from products.models import Product, ProductVariant
 
         products_data = [
@@ -94,6 +111,7 @@ class Command(BaseCommand):
                 "description": "Premium noise-cancelling wireless headphones with 30h battery life.",
                 "category": categories["electronics"],
                 "base_price": "79.99",
+                "seller": seller,
                 "variants": [
                     {"sku": "WH-BLK", "name": "Black", "price": "79.99", "stock": 50},
                     {"sku": "WH-WHT", "name": "White", "price": "79.99", "stock": 30},
@@ -105,6 +123,7 @@ class Command(BaseCommand):
                 "description": "Latest flagship smartphone with 6.7\" display and triple camera.",
                 "category": categories["phones"],
                 "base_price": "699.99",
+                "seller": seller,
                 "variants": [
                     {"sku": "SPX-128", "name": "128 GB", "price": "699.99", "stock": 20},
                     {"sku": "SPX-256", "name": "256 GB", "price": "799.99", "stock": 15},
@@ -116,6 +135,7 @@ class Command(BaseCommand):
                 "description": "100% organic cotton unisex t-shirt.",
                 "category": categories["clothing"],
                 "base_price": "19.99",
+                "seller": seller,
                 "variants": [
                     {"sku": "CWT-S", "name": "Small", "price": "19.99", "stock": 100},
                     {"sku": "CWT-M", "name": "Medium", "price": "19.99", "stock": 120},
@@ -128,6 +148,7 @@ class Command(BaseCommand):
                 "description": "A hands-on guide to building web apps with Django.",
                 "category": categories["books"],
                 "base_price": "34.99",
+                "seller": seller,
                 "variants": [
                     {"sku": "DFB-PB", "name": "Paperback", "price": "34.99", "stock": 200},
                 ],
@@ -138,6 +159,7 @@ class Command(BaseCommand):
                 "description": "Complete Python guide — instant download, 500+ pages.",
                 "category": categories["books"],
                 "base_price": "14.99",
+                "seller": seller,
                 "variants": [
                     {"sku": "PME-DIG", "name": "Digital Download", "price": "14.99", "stock": 0},
                 ],
@@ -148,6 +170,7 @@ class Command(BaseCommand):
                 "description": "1-year developer tooling license. Delivered via email.",
                 "category": categories["software"],
                 "base_price": "49.99",
+                "seller": seller,
                 "variants": [
                     {"sku": "DTP-1Y", "name": "1-Year License", "price": "49.99", "stock": 0},
                 ],

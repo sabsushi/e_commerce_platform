@@ -1,7 +1,6 @@
-from django.test import TestCase
+from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth import get_user_model
-from rest_framework.test import APIClient
 
 from users.models import Profile
 from products.models import Category, Product, ProductVariant
@@ -54,7 +53,7 @@ def make_order(buyer, variant, quantity=1):
 
 class SellerOrdersViewTests(TestCase):
     def setUp(self):
-        self.client = APIClient()
+        self.client = Client()
         self.category = Category.objects.create(name="Electronics", slug="electronics")
 
         self.seller = make_seller("seller1")
@@ -77,21 +76,22 @@ class SellerOrdersViewTests(TestCase):
         self.client.login(username="seller1", password="pass")
         response = self.client.get(reverse("orders:seller_orders"))
         self.assertEqual(response.status_code, 200)
-        ids = [o["id"] for o in response.data["results"]]
-        self.assertIn(self.own_order.id, ids)
+        order_ids = [o.id for o in response.context["page_obj"].object_list]
+        self.assertIn(self.own_order.id, order_ids)
 
     def test_seller_does_not_see_unrelated_orders(self):
         self.client.login(username="seller1", password="pass")
         response = self.client.get(reverse("orders:seller_orders"))
         self.assertEqual(response.status_code, 200)
-        ids = [o["id"] for o in response.data["results"]]
-        self.assertNotIn(self.unrelated_order.id, ids)
+        order_ids = [o.id for o in response.context["page_obj"].object_list]
+        self.assertNotIn(self.unrelated_order.id, order_ids)
 
     def test_buyer_is_forbidden(self):
         self.client.login(username="buyer1", password="pass")
         response = self.client.get(reverse("orders:seller_orders"))
         self.assertEqual(response.status_code, 403)
 
-    def test_unauthenticated_is_forbidden(self):
+    def test_unauthenticated_redirects_to_login(self):
         response = self.client.get(reverse("orders:seller_orders"))
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("login", response["Location"])

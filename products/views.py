@@ -2,6 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, render
+from django.utils.text import slugify
 from django.views.decorators.http import require_http_methods
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
@@ -13,7 +14,10 @@ from .models import Product, Category
 
 
 def is_seller(user):
-    return Profile.objects.filter(user=user, role=Profile.Role.SELLER).exists()
+    try:
+        return user.profile.role == Profile.Role.SELLER
+    except Profile.DoesNotExist:
+        return False
 
 
 def product_to_dict(product):
@@ -87,11 +91,17 @@ def product_list(request):
 
     min_price = request.GET.get("min_price")
     if min_price:
-        products = products.filter(base_price__gte=min_price)
+        try:
+            products = products.filter(base_price__gte=float(min_price))
+        except ValueError:
+            pass
 
     max_price = request.GET.get("max_price")
     if max_price:
-        products = products.filter(base_price__lte=max_price)
+        try:
+            products = products.filter(base_price__lte=float(max_price))
+        except ValueError:
+            pass
 
     paginator = Paginator(products, 10)
     page = request.GET.get("page", 1)
@@ -145,8 +155,16 @@ def product_create(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
+    base_slug = slugify(data["name"])
+    slug = base_slug
+    counter = 1
+    while Product.objects.filter(slug=slug).exists():
+        slug = f"{base_slug}-{counter}"
+        counter += 1
+
     product = Product.objects.create(
         name=data["name"],
+        slug=slug,
         description=data["description"],
         base_price=data["base_price"],
         category=category,
@@ -165,6 +183,12 @@ def product_update(request, pk):
         )
 
     product = get_object_or_404(Product.objects.prefetch_related("variants"), pk=pk)
+
+    if product.seller != request.user:
+        return Response(
+            {"detail": "Não tens permissão para editar este produto."},
+            status=status.HTTP_403_FORBIDDEN,
+        )
 
     data = request.data
     if "name" in data:
@@ -196,6 +220,12 @@ def product_delete(request, pk):
         )
 
     product = get_object_or_404(Product, pk=pk)
+
+    if product.seller != request.user:
+        return Response(
+            {"detail": "Não tens permissão para eliminar este produto."},
+            status=status.HTTP_403_FORBIDDEN,
+        )
 
     product.is_active = False
     product.save()
@@ -229,11 +259,17 @@ def product_search(request):
 
     min_price = request.GET.get("min_price")
     if min_price:
-        products = products.filter(base_price__gte=min_price)
+        try:
+            products = products.filter(base_price__gte=float(min_price))
+        except ValueError:
+            pass
 
     max_price = request.GET.get("max_price")
     if max_price:
-        products = products.filter(base_price__lte=max_price)
+        try:
+            products = products.filter(base_price__lte=float(max_price))
+        except ValueError:
+            pass
 
     category_slug = request.GET.get("category")
     if category_slug:

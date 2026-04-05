@@ -1,15 +1,18 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 
 
 @login_required(login_url='login')
 def profile_view(request):
-    profile = request.user.profile_set.first()
+    profile = request.user.profile
     context = {
         'username': request.user.username,
         'email':    request.user.email,
-        'role':     profile.role if profile else '-',
+        'role':     profile.role,
+        'bio':      profile.bio,
     }
 
     if request.method == 'POST':
@@ -17,9 +20,14 @@ def profile_view(request):
 
         if action == 'update_profile':
             email = request.POST.get('email', '').strip()
+            bio = request.POST.get('bio', '').strip()
             if email:
                 request.user.email = email
                 request.user.save()
+            profile.bio = bio
+            profile.save()
+            context['email'] = request.user.email
+            context['bio'] = profile.bio
             context['success'] = 'Profile updated successfully!'
 
         elif action == 'change_password':
@@ -29,6 +37,11 @@ def profile_view(request):
             if not request.user.check_password(old_password):
                 context['error_password'] = 'Old password is incorrect.'
             else:
+                try:
+                    validate_password(new_password, request.user)
+                except ValidationError as e:
+                    context['error_password'] = ' '.join(e.messages)
+                    return render(request, 'users/profile.html', context)
                 request.user.set_password(new_password)
                 request.user.save()
                 update_session_auth_hash(request, request.user)

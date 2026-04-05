@@ -2,6 +2,7 @@ from django import forms
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from django.db.models import Min
 from django.utils.html import format_html
 from .models import Product, Category, ProductVariant
 
@@ -67,6 +68,7 @@ class ProductAdmin(admin.ModelAdmin):
     prepopulated_fields = {"slug": ("name",)}
     readonly_fields = ["created_at", "updated_at"]
     inlines = [ProductVariantInline]
+    list_select_related = ["seller", "category"]
 
     fieldsets = (
         (None, {"fields": ("name", "slug", "description", "seller")}),
@@ -76,13 +78,15 @@ class ProductAdmin(admin.ModelAdmin):
         ("Datas", {"fields": ("created_at", "updated_at"), "classes": ("collapse",)}),
     )
 
+    def get_queryset(self, request):
+        return super().get_queryset(request).annotate(min_variant_price=Min("variants__price"))
+
     def base_price_display(self, obj):
-        if obj.variants.exists():
-            min_price = min(v.price for v in obj.variants.all())
-            return format_html(f"${min_price}")
-        return format_html(f"${obj.base_price}")
+        price = obj.min_variant_price if obj.min_variant_price is not None else obj.base_price
+        return format_html("${}", price)
 
     base_price_display.short_description = "Preço"
+    base_price_display.admin_order_field = "base_price"
 
 
 @admin.register(ProductVariant)
