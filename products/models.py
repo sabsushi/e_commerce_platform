@@ -1,6 +1,5 @@
 from django.conf import settings
 from django.db import models
-from django.core.exceptions import ValidationError
 
 
 class StockChange(models.Model):
@@ -25,11 +24,6 @@ class StockChange(models.Model):
     )
     user = models.ForeignKey("auth.User", null=True, on_delete=models.SET_NULL)
     created_at = models.DateTimeField(auto_now_add=True)
-
-
-class ProductType(models.TextChoices):
-    PHYSICAL = "physical", "Physical"
-    DIGITAL = "digital", "Digital"
 
 
 class Category(models.Model):
@@ -60,7 +54,6 @@ class Product(models.Model):
     name = models.CharField(max_length=300)
     slug = models.SlugField(unique=True)
     description = models.TextField()
-    product_type = models.CharField(max_length=20, choices=ProductType.choices)
     category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name="products")
     seller = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -91,12 +84,5 @@ class ProductVariant(models.Model):
 
     def __str__(self):
         return f"{self.product.name} - {self.name}"
-
-    def clean(self):
-        if self.product.product_type == ProductType.DIGITAL:
-            if self.stock != 0:
-                raise ValidationError(
-                    "Digital products must have exactly one variant with stock=0."
-                )
 
 

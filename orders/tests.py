@@ -28,7 +28,6 @@ def make_product(seller, name, category):
         name=name,
         slug=name.lower().replace(" ", "-"),
         description="desc",
-        product_type="physical",
         category=category,
         base_price="10.00",
         seller=seller,

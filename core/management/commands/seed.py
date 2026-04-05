@@ -85,14 +85,13 @@ class Command(BaseCommand):
         return categories
 
     def _create_products(self, categories):
-        from products.models import Product, ProductVariant, ProductType
+        from products.models import Product, ProductVariant
 
         products_data = [
             {
                 "name": "Wireless Headphones",
                 "slug": "wireless-headphones",
                 "description": "Premium noise-cancelling wireless headphones with 30h battery life.",
-                "product_type": ProductType.PHYSICAL,
                 "category": categories["electronics"],
                 "base_price": "79.99",
                 "variants": [
@@ -104,7 +103,6 @@ class Command(BaseCommand):
                 "name": "Smartphone Pro X",
                 "slug": "smartphone-pro-x",
                 "description": "Latest flagship smartphone with 6.7\" display and triple camera.",
-                "product_type": ProductType.PHYSICAL,
                 "category": categories["phones"],
                 "base_price": "699.99",
                 "variants": [
@@ -116,7 +114,6 @@ class Command(BaseCommand):
                 "name": "Classic White Tee",
                 "slug": "classic-white-tee",
                 "description": "100% organic cotton unisex t-shirt.",
-                "product_type": ProductType.PHYSICAL,
                 "category": categories["clothing"],
                 "base_price": "19.99",
                 "variants": [
@@ -129,7 +126,6 @@ class Command(BaseCommand):
                 "name": "Django for Beginners",
                 "slug": "django-for-beginners",
                 "description": "A hands-on guide to building web apps with Django.",
-                "product_type": ProductType.PHYSICAL,
                 "category": categories["books"],
                 "base_price": "34.99",
                 "variants": [
@@ -140,7 +136,6 @@ class Command(BaseCommand):
                 "name": "Python Mastery eBook",
                 "slug": "python-mastery-ebook",
                 "description": "Complete Python guide — instant download, 500+ pages.",
-                "product_type": ProductType.DIGITAL,
                 "category": categories["books"],
                 "base_price": "14.99",
                 "variants": [
@@ -151,7 +146,6 @@ class Command(BaseCommand):
                 "name": "DevTools Pro License",
                 "slug": "devtools-pro-license",
                 "description": "1-year developer tooling license. Delivered via email.",
-                "product_type": ProductType.DIGITAL,
                 "category": categories["software"],
                 "base_price": "49.99",
                 "variants": [

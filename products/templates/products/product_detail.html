@@ -37,14 +37,13 @@
                 <label for="variant_id" class="form-label fw-semibold">Select Variant</label>
                 <select name="variant_id" id="variant_id" class="form-select">
                     {% for v in product.variants.all %}
-                    <option value="{{ v.pk }}" {% if v.stock == 0 and product.product_type == 'physical' %}disabled{% endif %}>
-                        {{ v.name }} — ${{ v.price }}{% if product.product_type == 'physical' %}{% if v.stock > 0 %} ({{ v.stock }} in stock){% else %} (out of stock){% endif %}{% endif %}
+                    <option value="{{ v.pk }}" {% if v.stock == 0 %}disabled{% endif %}>
+                        {{ v.name }} — ${{ v.price }}{% if v.stock > 0 %} ({{ v.stock }} in stock){% else %} (out of stock){% endif %}
                     </option>
                     {% endfor %}
                 </select>
                 <div class="mt-2">
                     {% for v in product.variants.all %}
-                    {% if product.product_type == 'physical' %}
                         {% if v.stock > 5 %}
                         <span class="badge bg-success me-1">{{ v.name }}: {{ v.stock }} in stock</span>
                         {% elif v.stock > 0 %}
@@ -52,7 +51,6 @@
                         {% else %}
                         <span class="badge bg-danger me-1">{{ v.name }}: out of stock</span>
                         {% endif %}
-                    {% endif %}
                     {% endfor %}
                 </div>
             </div>

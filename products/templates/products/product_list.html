@@ -46,12 +46,10 @@
                 <p class="text-muted small mb-1">by <a href="{% url 'seller_profile' product.seller.username %}" class="text-decoration-none">{{ product.seller.username }}</a></p>
                 {% endif %}
                 <p class="card-text text-muted small flex-grow-1">{{ product.description|truncatechars:80 }}</p>
-                {% if product.product_type == 'physical' %}
-                    {% if product.total_stock > 0 %}
-                    <span class="badge bg-success mb-1" style="width:fit-content;">{{ product.total_stock }} in stock</span>
-                    {% else %}
-                    <span class="badge bg-danger mb-1" style="width:fit-content;">Out of stock</span>
-                    {% endif %}
+                {% if product.total_stock > 0 %}
+                <span class="badge bg-success mb-1" style="width:fit-content;">{{ product.total_stock }} in stock</span>
+                {% else %}
+                <span class="badge bg-danger mb-1" style="width:fit-content;">Out of stock</span>
                 {% endif %}
                 <div class="d-flex justify-content-between align-items-center mt-2">
                     <strong class="text-primary">${{ product.base_price }}</strong>
