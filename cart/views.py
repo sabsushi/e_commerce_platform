@@ -20,7 +20,10 @@ from .services import (
 
 
 def is_buyer(user):
-    return Profile.objects.filter(user=user, role=Profile.Role.BUYER).exists()
+    try:
+        return user.profile.role == Profile.Role.BUYER
+    except Profile.DoesNotExist:
+        return False
 
 
 @api_view(["GET"])

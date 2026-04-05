@@ -21,11 +21,17 @@ from .services import (
 
 
 def is_buyer(user):
-    return Profile.objects.filter(user=user, role=Profile.Role.BUYER).exists()
+    try:
+        return user.profile.role == Profile.Role.BUYER
+    except Profile.DoesNotExist:
+        return False
 
 
 def is_seller(user):
-    return Profile.objects.filter(user=user, role=Profile.Role.SELLER).exists()
+    try:
+        return user.profile.role == Profile.Role.SELLER
+    except Profile.DoesNotExist:
+        return False
 
 
 def order_to_dict(order):
@@ -181,8 +187,7 @@ def cancel_order_view(request, pk):
 @login_required
 @require_POST
 def checkout_html_view(request):
-    from users.models import Profile
-    if not Profile.objects.filter(user=request.user, role=Profile.Role.BUYER).exists():
+    if not is_buyer(request.user):
         messages.error(request, "Only buyers can checkout.")
         return redirect("cart:page")
 

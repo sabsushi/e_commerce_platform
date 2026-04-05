@@ -3,8 +3,11 @@ from users.models import Profile
 
 def user_role(request):
     if request.user.is_authenticated:
-        profile = Profile.objects.filter(user=request.user).first()
-        role = profile.role if profile else None
+        try:
+            profile = request.user.profile
+            role = profile.role
+        except Profile.DoesNotExist:
+            role = None
 
         cart_count = 0
         if role == Profile.Role.BUYER:

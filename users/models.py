@@ -11,7 +11,7 @@ class Profile(models.Model):
         BUYER = "buyer", "Buyer"
         SELLER = "seller", "Seller"
 
-    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    user = models.OneToOneField(get_user_model(), on_delete=models.CASCADE, related_name="profile")
     role = models.CharField(max_length=10, choices=Role.choices, default=Role.BUYER)
     bio = models.TextField(blank=True, default="")
 
@@ -22,4 +22,4 @@ class Profile(models.Model):
 @receiver(post_save, sender=User)
 def create_profile(sender, instance, created, **kwargs):
     if created:
-        Profile.objects.create(user=instance)
+        Profile.objects.get_or_create(user=instance)

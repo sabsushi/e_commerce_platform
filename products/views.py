@@ -14,7 +14,10 @@ from .models import Product, Category
 
 
 def is_seller(user):
-    return Profile.objects.filter(user=user, role=Profile.Role.SELLER).exists()
+    try:
+        return user.profile.role == Profile.Role.SELLER
+    except Profile.DoesNotExist:
+        return False
 
 
 def product_to_dict(product):
@@ -88,11 +91,17 @@ def product_list(request):
 
     min_price = request.GET.get("min_price")
     if min_price:
-        products = products.filter(base_price__gte=min_price)
+        try:
+            products = products.filter(base_price__gte=float(min_price))
+        except ValueError:
+            pass
 
     max_price = request.GET.get("max_price")
     if max_price:
-        products = products.filter(base_price__lte=max_price)
+        try:
+            products = products.filter(base_price__lte=float(max_price))
+        except ValueError:
+            pass
 
     paginator = Paginator(products, 10)
     page = request.GET.get("page", 1)
@@ -250,11 +259,17 @@ def product_search(request):
 
     min_price = request.GET.get("min_price")
     if min_price:
-        products = products.filter(base_price__gte=min_price)
+        try:
+            products = products.filter(base_price__gte=float(min_price))
+        except ValueError:
+            pass
 
     max_price = request.GET.get("max_price")
     if max_price:
-        products = products.filter(base_price__lte=max_price)
+        try:
+            products = products.filter(base_price__lte=float(max_price))
+        except ValueError:
+            pass
 
     category_slug = request.GET.get("category")
     if category_slug:

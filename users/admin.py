@@ -18,8 +18,10 @@ class CustomUserAdmin(UserAdmin):
     inlines = [ProfileInline]
 
     def get_role(self, obj):
-        profile = obj.profile_set.first()
-        return profile.role if profile else '-'
+        try:
+            return obj.profile.role
+        except Exception:
+            return '-'
     get_role.short_description = 'Role'
 
 
