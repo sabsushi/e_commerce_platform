@@ -280,7 +280,7 @@ def product_list_view(request):
     from django.db.models import Sum
     products = (
         Product.objects.filter(is_active=True)
-        .select_related("category")
+        .select_related("category", "seller")
         .prefetch_related("variants")
         .annotate(total_stock=Sum("variants__stock"))
     )

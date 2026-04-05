@@ -42,6 +42,9 @@
             <div class="card-body d-flex flex-column">
                 <span class="badge bg-secondary mb-1" style="width:fit-content;">{{ product.category.name }}</span>
                 <h6 class="card-title">{{ product.name }}</h6>
+                {% if product.seller %}
+                <p class="text-muted small mb-1">by <a href="{% url 'seller_profile' product.seller.username %}" class="text-decoration-none">{{ product.seller.username }}</a></p>
+                {% endif %}
                 <p class="card-text text-muted small flex-grow-1">{{ product.description|truncatechars:80 }}</p>
                 {% if product.product_type == 'physical' %}
                     {% if product.total_stock > 0 %}
