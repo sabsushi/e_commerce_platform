@@ -1,11 +1,15 @@
 import json
-from django.views.decorators.http import require_http_methods
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import redirect, render
+from django.views.decorators.http import require_http_methods, require_POST
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from users.models import Profile
+from .models import Cart, CartItem
 from .services import (
     get_cart_contents,
     add_to_cart,
@@ -136,3 +140,53 @@ def cart_clear_view(request):
 
     clear_cart(request.user)
     return Response({"detail": "Cart cleared successfully."})
+
+
+# ── HTML views ────────────────────────────────────────────────────────────────
+
+@login_required
+def cart_page_view(request):
+    if not is_buyer(request.user):
+        messages.error(request, "Only buyers can access the cart.")
+        return redirect("product_list")
+
+    cart = Cart.objects.filter(buyer=request.user, status=Cart.Status.OPEN).first()
+    items = (
+        CartItem.objects.filter(cart=cart)
+        .select_related("variant", "variant__product")
+        if cart else []
+    )
+    subtotal = cart.subtotal if cart else 0
+    return render(request, "cart/cart.html", {"items": items, "subtotal": subtotal})
+
+
+@login_required
+@require_POST
+def cart_add_html(request):
+    if not is_buyer(request.user):
+        messages.error(request, "Only buyers can add items to the cart.")
+        return redirect("product_list")
+
+    variant_id = request.POST.get("variant_id")
+    quantity = int(request.POST.get("quantity", 1))
+    next_url = request.POST.get("next", "product_list")
+
+    try:
+        add_to_cart(request.user, variant_id, quantity)
+        messages.success(request, "Item added to cart.")
+    except ValueError as e:
+        messages.error(request, str(e))
+
+    return redirect(next_url)
+
+
+@login_required
+@require_POST
+def cart_remove_html(request, item_id):
+    if is_buyer(request.user):
+        try:
+            remove_from_cart(request.user, item_id)
+            messages.success(request, "Item removed from cart.")
+        except ValueError as e:
+            messages.error(request, str(e))
+    return redirect("cart:page")

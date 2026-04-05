@@ -1,0 +1,83 @@
+{% extends "core/base.html" %}
+
+{% block title %}Cart - ShopDjango{% endblock %}
+
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-cart3"></i> Your Cart</h2>
+
+{% if items %}
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Product</th>
+                            <th>Variant</th>
+                            <th class="text-center">Qty</th>
+                            <th class="text-end">Unit Price</th>
+                            <th class="text-end">Subtotal</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in items %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'product_detail' item.variant.product.pk %}" class="text-decoration-none fw-semibold">
+                                    {{ item.variant.product.name }}
+                                </a>
+                            </td>
+                            <td class="text-muted small">{{ item.variant.name }}</td>
+                            <td class="text-center">{{ item.quantity }}</td>
+                            <td class="text-end">${{ item.variant.price }}</td>
+                            <td class="text-end fw-semibold">${{ item.subtotal }}</td>
+                            <td class="text-end">
+                                <form method="post" action="{% url 'cart:remove_html' item.pk %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">Order Summary</h5>
+                <hr>
+                <div class="d-flex justify-content-between mb-3">
+                    <span>Subtotal</span>
+                    <strong>${{ subtotal }}</strong>
+                </div>
+                <form method="post" action="{% url 'orders:checkout_html' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success w-100 mb-2">
+                        <i class="bi bi-bag-check"></i> Proceed to Checkout
+                    </button>
+                </form>
+                <a href="{% url 'product_list' %}" class="btn btn-outline-secondary w-100">
+                    <i class="bi bi-arrow-left"></i> Continue Shopping
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<div class="text-center py-5 text-muted">
+    <i class="bi bi-cart-x display-3"></i>
+    <p class="mt-3 fs-5">Your cart is empty.</p>
+    <a href="{% url 'product_list' %}" class="btn btn-primary mt-2">Browse Products</a>
+</div>
+{% endif %}
+
+{% endblock %}

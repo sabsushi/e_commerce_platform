@@ -23,7 +23,9 @@ def add_to_cart(user, variant_id, quantity=1):
     if variant.stock < quantity:
         raise ValueError("Insufficient stock")
 
-    cart_item, created = CartItem.objects.get_or_create(cart=cart, variant=variant)
+    cart_item, created = CartItem.objects.get_or_create(
+        cart=cart, variant=variant, defaults={"quantity": 0}
+    )
 
     new_quantity = cart_item.quantity + quantity
     if variant.stock < new_quantity:

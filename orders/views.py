@@ -1,6 +1,8 @@
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.shortcuts import render
+from django.shortcuts import redirect, render
+from django.views.decorators.http import require_POST
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -174,6 +176,23 @@ def cancel_order_view(request, pk):
         )
     except ValueError as e:
         return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@login_required
+@require_POST
+def checkout_html_view(request):
+    from users.models import Profile
+    if not Profile.objects.filter(user=request.user, role=Profile.Role.BUYER).exists():
+        messages.error(request, "Only buyers can checkout.")
+        return redirect("cart:page")
+
+    try:
+        order = checkout(request.user)
+        messages.success(request, f"Order #{order.id} placed successfully!")
+        return render(request, "orders/order_success.html", {"order": order})
+    except ValueError as e:
+        messages.error(request, str(e))
+        return redirect("cart:page")
 
 
 @login_required

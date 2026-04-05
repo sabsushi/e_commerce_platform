@@ -24,7 +24,6 @@ def product_to_dict(product):
         "slug": product.slug,
         "description": product.description,
         "base_price": str(product.base_price),
-        "product_type": product.product_type,
         "category": {
             "id": product.category.id,
             "name": product.category.name,
@@ -54,7 +53,6 @@ def product_list_dict(product):
         "name": product.name,
         "slug": product.slug,
         "base_price": str(min_price),
-        "product_type": product.product_type,
         "category_name": product.category.name,
         "stock": total_stock,
         "is_active": product.is_active,
@@ -151,7 +149,6 @@ def product_create(request):
         name=data["name"],
         description=data["description"],
         base_price=data["base_price"],
-        product_type=data.get("product_type", "physical"),
         category=category,
         seller=request.user,
     )
@@ -176,8 +173,6 @@ def product_update(request, pk):
         product.description = data["description"]
     if "base_price" in data:
         product.base_price = data["base_price"]
-    if "product_type" in data:
-        product.product_type = data["product_type"]
     if "category" in data:
         try:
             product.category = Category.objects.get(pk=data["category"])
@@ -277,10 +272,12 @@ def category_list(request):
 # --- HTML Views ---
 
 def product_list_view(request):
+    from django.db.models import Sum
     products = (
         Product.objects.filter(is_active=True)
-        .select_related("category")
+        .select_related("category", "seller")
         .prefetch_related("variants")
+        .annotate(total_stock=Sum("variants__stock"))
     )
 
     categories = Category.objects.all()

@@ -35,6 +35,18 @@
             </ul>
             <ul class="navbar-nav ms-auto align-items-center">
                 {% if user.is_authenticated %}
+                    {% if user_role == "buyer" %}
+                    <li class="nav-item me-2">
+                        <a class="nav-link position-relative" href="{% url 'cart:page' %}">
+                            <i class="bi bi-cart3"></i>
+                            {% if cart_count > 0 %}
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size:.65rem;">
+                                {{ cart_count }}
+                            </span>
+                            {% endif %}
+                        </a>
+                    </li>
+                    {% endif %}
                     <li class="nav-item me-2">
                         <a class="nav-link" href="{% url 'profile' %}">
                             <i class="bi bi-person-circle"></i> {{ user.username }}
