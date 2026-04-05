@@ -58,7 +58,13 @@
                     <span>Subtotal</span>
                     <strong>${{ subtotal }}</strong>
                 </div>
-                <a href="{% url 'product_list' %}" class="btn btn-outline-secondary w-100 mb-2">
+                <form method="post" action="{% url 'orders:checkout_html' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success w-100 mb-2">
+                        <i class="bi bi-bag-check"></i> Proceed to Checkout
+                    </button>
+                </form>
+                <a href="{% url 'product_list' %}" class="btn btn-outline-secondary w-100">
                     <i class="bi bi-arrow-left"></i> Continue Shopping
                 </a>
             </div>
